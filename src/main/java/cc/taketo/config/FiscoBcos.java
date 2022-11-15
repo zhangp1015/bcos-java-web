@@ -7,24 +7,25 @@ import org.fisco.bcos.sdk.config.ConfigOption;
 import org.fisco.bcos.sdk.config.exceptions.ConfigException;
 import org.fisco.bcos.sdk.config.model.ConfigProperty;
 import org.fisco.bcos.sdk.model.CryptoType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.representer.Representer;
 
-import java.io.InputStream;
+import java.util.HashMap;
 
 /**
  * @Title: FiscoBcos
  * @Package: cc.taketo.config
  * @Description:
  * @Author: zhangp
- * @Date: 2022/11/14 - 15:42
+ * @Date: 2022/11/15 - 10:01
  */
-
+@Slf4j
 @Data
 @Component
-@Slf4j
 public class FiscoBcos {
+
+    @Autowired
+    BcosConfig bcosConfig;
 
     BcosSDK bcosSDK;
 
@@ -41,15 +42,14 @@ public class FiscoBcos {
     }
 
     public ConfigProperty loadProperty() {
-        Representer representer = new Representer();
-        representer.getPropertyUtils().setSkipMissingProperties(true);
-        Yaml yaml = new Yaml(representer);
-        String configFile = "/fisco-config.yml";
-        try (InputStream inputStream = this.getClass().getResourceAsStream(configFile)) {
-            return yaml.loadAs(inputStream, ConfigProperty.class);
-        } catch (Exception e) {
-            log.error("load property: ", e);
-        }
-        return null;
+        ConfigProperty configProperty = new ConfigProperty();
+        configProperty.setCryptoMaterial(bcosConfig.getCryptoMaterial());
+        configProperty.setAccount(bcosConfig.getAccount());
+        configProperty.setNetwork(new HashMap<String, Object>() {{
+            put("peers", bcosConfig.getNetwork().get("peers"));
+        }});
+        configProperty.setAmop(bcosConfig.getAmop());
+        configProperty.setThreadPool(bcosConfig.getThreadPool());
+        return configProperty;
     }
 }
